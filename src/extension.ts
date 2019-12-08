@@ -1,5 +1,6 @@
 import { Extension, extensions, ExtensionContext, window } from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 
 interface CortexDebug {
 	registerSVDFile(expression: RegExp | string, path: string): void;
@@ -12,12 +13,12 @@ export function activate(context: ExtensionContext) {
 		return;
 	}
 
+	var files = fs.readdirSync(path.join(context.extensionPath, 'data')).filter(function (file) {
+		return path.extname(file).toLowerCase() === '.svd';
+	});
+
 	cortexDebug.activate().then((cdbg) => {
-		cdbg.registerSVDFile(/^STM32L4[a-z0-9]1.*/i, path.join(context.extensionPath, 'data', 'STM32L4x1.svd'));
-		cdbg.registerSVDFile(/^STM32L4[a-z0-9]2.*/i, path.join(context.extensionPath, 'data', 'STM32L4x2.svd'));
-		cdbg.registerSVDFile(/^STM32L4[a-z0-9]3.*/i, path.join(context.extensionPath, 'data', 'STM32L4x3.svd'));
-		cdbg.registerSVDFile(/^STM32L4[a-z0-9]5.*/i, path.join(context.extensionPath, 'data', 'STM32L4x5.svd'));
-		cdbg.registerSVDFile(/^STM32L4[a-z0-9]6.*/i, path.join(context.extensionPath, 'data', 'STM32L4x6.svd'));
+		files.forEach((file) => cdbg.registerSVDFile(file.replace(/\.[^/.]+$/, ""), path.join(context.extensionPath, 'data', file)));
 	}, (error) => {
 		console.log('Unable to activate cortexDebug');
 	});
